@@ -3,15 +3,15 @@ from common_opencv import preview_window
 
 from monospace_regular_12 import monospace_regular_12
 
-from terminal_output_parser import parse_id
-from terminal_output_parser import parse_ifconfig
-from terminal_output_parser import parse_ls
-from terminal_output_parser import parse_netstat
-from terminal_output_parser import parse_ps
-from terminal_output_parser import parse_pwd
-from terminal_output_parser import parse_resolv
-from terminal_output_parser import parse_uname
-from terminal_output_parser import parse_cat
+from output_parser import parse_id
+from output_parser import parse_ifconfig
+from output_parser import parse_ls
+from output_parser import parse_netstat
+from output_parser import parse_ps
+from output_parser import parse_pwd
+from output_parser import parse_resolv
+from output_parser import parse_uname
+from output_parser import parse_cat
 
 import cv2 as cv
 import numpy as np
@@ -225,7 +225,7 @@ if __name__ == '__main__':
 
     # TODO: find terminal prompt root @ honestmistake :~# | :~$
     prompt = 'biot@honestmistake'
-    print(f'prompt    : {prompt}')
+    print(f'prompt : {prompt}')
 
     commands = ['uname -a', 'id', 'pwd', 'ls -la #less']
     # commands = ['ifconfig #less', 'cat /etc/resolv.conf', 'netstat -netapl #less']   # network
@@ -241,26 +241,24 @@ if __name__ == '__main__':
         type_string('clear')
         pyautogui.press('enter')
 
-        print(f'\ncommand   : {command}')
+        print(f'\ncommand : {command}')
 
         terminal_rows = run_terminal_command(command, progress=False, display=False, preview=False)
 
         if command.startswith('ls'):
-            ls = parse_ls(prompt, terminal_rows, display=False)
+            ls = parse_ls(prompt, terminal_rows, display=True)
             output.append({f'{command}': ls})
             for i, row in enumerate(terminal_rows):
                 # print(f'{i:>2} : {row}')
 
                 if '.bash_history' in row:
-                    print(f'{i} {row}')
                     words = row.split()
-                    print(f'{i} {words}')
-                    print(f'words[4] : {words[4]}')
-                    commands.append('cat .bash_history #less')
+                    if int(words[4]) > 1:
+                        commands.append('cat .bash_history #less')
+                        # print(f'words[4] : {words[4]}')
 
                 if row.endswith('.ssh'):
                     if 'ls -la .ssh/' not in commands:
-                        print(f'{i} {row}')
                         commands.append('ls -la .ssh/')
 
                 # if row.endswith('authorized_keys') and 'authorized_keys' not in commands:

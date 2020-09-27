@@ -5,7 +5,6 @@
 
 
 def parse_cat(prompt, terminal_rows, display=False):
-    print('-' * 80)
     command_output = []
     # for i, row in enumerate(terminal_rows):
     for i in range(0, len(terminal_rows), 1):
@@ -21,15 +20,13 @@ def parse_cat(prompt, terminal_rows, display=False):
                     command_output.append(terminal_rows[i])
 
     if display:
-        print('')
         for i, e in enumerate(command_output):
-            print(f'{i:>3} : {e}')
+            print(f'{i:<3} : {e}')
 
     return command_output
 
 
 def parse_ps(prompt, terminal_rows, users, display=False):
-    print('-' * 80)
     tmp = ''
     for i, row in enumerate(terminal_rows):
         tmp = tmp + row
@@ -64,7 +61,6 @@ def parse_ps(prompt, terminal_rows, users, display=False):
 
 
 def parse_netstat(prompt, terminal_rows, display=False):
-    print('-' * 80)
     states = ['ESTABLISHED', 'SYN_SENT', 'SYN_RECV', 'FIN_WAIT1', 'FIN_WAIT2', 'TIME_WAIT',
               'CLOSE', 'CLOSE_WAIT', 'LAST_ACK', 'LISTEN', 'CLOSING', 'UNKNOWN']
 
@@ -83,7 +79,6 @@ def parse_netstat(prompt, terminal_rows, display=False):
 
 
 def parse_resolv(prompt, terminal_rows, display=False):
-    print('\n', '-' * 80)
     tmp = []
     resolv = {}
     command_output = []
@@ -112,7 +107,6 @@ def parse_resolv(prompt, terminal_rows, display=False):
 
 def parse_ifconfig(prompt, terminal_rows, display=False):
     ifconfig = []
-
     command_output = []
     for row in terminal_rows:
         # print(f'{row}')
@@ -174,7 +168,7 @@ def parse_ifconfig(prompt, terminal_rows, display=False):
     if display:
         # print(f'ifconfig:{ifconfig}')
         for i, iface in enumerate(ifconfig):
-            print(f'\ninterface : {i}')
+            print(f'interface : {i}')
             for k, v, in iface.items():
                 print(f'{k:>12} : {v}')
 
@@ -209,7 +203,6 @@ def parse_uname(prompt, terminal_rows, display=False):
     uname['operating_system'] = command_output_array[-1]
 
     if display:
-        print('')
         for key, value in uname.items():
             print(f'{key:>20} : {value}')
 
@@ -248,7 +241,6 @@ def parse_id(prompt, terminal_rows, display=False):
     id['groups'] = tmp
 
     if display:
-        print('')
         for key, value in id.items():
             if key == 'groups':
                 print(f'{key:>12} : ')
@@ -294,6 +286,6 @@ def parse_ls(prompt, terminal_rows, display=False):
 
     if display:
         for i, row in enumerate(command_output):
-            print(f'{i:<3} {row}')
+            print(f'{i:<3} : {row}')
 
     return {'ls': command_output}

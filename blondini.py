@@ -3,15 +3,15 @@ from common_opencv import preview_window
 
 from monospace_regular_12 import monospace_regular_12
 
-from output_parser import parse_id
-from output_parser import parse_ifconfig
-from output_parser import parse_ls
-from output_parser import parse_netstat
-from output_parser import parse_ps
-from output_parser import parse_pwd
-from output_parser import parse_resolv
-from output_parser import parse_uname
-from output_parser import parse_cat
+from parser import parse_cat
+from parser import parse_id
+from parser import parse_ifconfig
+from parser import parse_ls
+from parser import parse_netstat
+from parser import parse_ps
+from parser import parse_pwd
+from parser import parse_resolv
+from parser import parse_uname
 
 import cv2 as cv
 import numpy as np
@@ -205,8 +205,8 @@ if __name__ == '__main__':
     # pyautogui.FAILSAFE = True
     # pyautogui.PAUSE = 0.250
 
-    os = 'mate'
-    dir = f'img/{os}'
+    # os = 'mate'
+    # dir = f'img/{os}'
     # print(f'\n{os} {dir}')
 
     # screen resolution, width x height
@@ -229,8 +229,8 @@ if __name__ == '__main__':
 
     commands = ['uname -a', 'id', 'pwd', 'ls -la #less']
     # commands = ['ifconfig #less', 'cat /etc/resolv.conf', 'netstat -netapl #less']   # network
-    # commands = ['cat /etc/passwd #less', 'ps -ef #less']    # running processes
-    # /etc/ssh/sshd_config
+    commands = ['cat /etc/passwd #less', 'ps -ef #less']    # running processes
+    # cat /etc/ssh/sshd_config
 
     output = []
     users = []
@@ -277,7 +277,7 @@ if __name__ == '__main__':
                     user = e.split(':')
                     users.append(user[0])
                 users.sort()
-                output.append({f'{command}': users})
+                output.append({f'users': users})
 
         if command.startswith('pwd'):
             pwd = parse_pwd(prompt, terminal_rows, display=True)

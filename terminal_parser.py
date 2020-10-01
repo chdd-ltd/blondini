@@ -3,6 +3,7 @@
 
 """
 
+
 def terminal_parser(command, terminal_rows, session, display=False):
 
     prompt = session[1]['prompt']
@@ -13,7 +14,6 @@ def terminal_parser(command, terminal_rows, session, display=False):
 
     if command.startswith('printenv'):
         printenv_array = parse_list(prompt, terminal_rows, display=display)
-        # print(f'printenv_array:{type(printenv_array)}')
         printenv = {}
         for line in printenv_array:
             x = line.split('=')
@@ -31,8 +31,13 @@ def terminal_parser(command, terminal_rows, session, display=False):
                     printenv[x[0]] = _
                     # print(f'{x[0]} -> {_}')
 
-        session.append({f'printenv': printenv})
+        session.append({'printenv': printenv})
 
+    if command.startswith('id'):
+        id = parse_id(prompt, terminal_rows, display=display)
+        session.append({'id': id})
+
+# -------------------------------------------------------------------------
     # if command.startswith('find'):
     #     find = parse_list(session[1]["prompt"], terminal_rows, display=True)
     #     session.append({f'{command}': find})
@@ -71,10 +76,6 @@ def terminal_parser(command, terminal_rows, session, display=False):
     #             users.append(user[0])
     #         users.sort()
     #         session.append({f'users': users})
-    #
-    # if command.startswith('id'):
-    #     id = parse_id(session[1]["prompt"], terminal_rows, display=True)
-    #     session.append({f'{command}': id})
     #
     # if command.startswith('uname'):
     #     uname = parse_uname(session[1]["prompt"], terminal_rows, display=True)
@@ -287,60 +288,62 @@ def terminal_parser(command, terminal_rows, session, display=False):
 #     return uname
 #
 #
-# def parse_id(session[1]["prompt"], terminal_rows, display=False):
-#
-#     command_output = parse_list(session[1]["prompt"], terminal_rows, display=False)
-#
-#     command_output_string = ''
-#     for line in command_output:
-#         command_output_string += line
-#         command_output_string += ' '
-#
-#     # print(f'parse_id:command_output_string:{command_output_string}')
-#
-#     command_output_string = command_output_string.replace(' ', '-')
-#     command_output_string = command_output_string.replace(')-', ',')
-#     # print(f'command_output_string:{command_output_string}')
-#
-#     command_output_array = command_output_string.split(',')
-#     # print(f'command_output_array:{command_output_array}')
-#
-#     id = {}
-#     _ = command_output_array[0]
-#     _ = _[8:]
-#     _ = _.replace('(', '')
-#     _ = _.replace(')', '')
-#     id['username'] = _
-#
-#     id['uid'] = command_output_array[0][4:8]
-#     id['gid'] = command_output_array[1][4:8]
-#
-#     tmp = command_output_array[2:]
-#     tmp[0] = tmp[0].replace('groups=', '')
-#     id['groups'] = tmp
-#
-#     if display:
-#         for key, value in id.items():
-#             if key == 'groups':
-#                 print(f'{key:>12} : ')
-#                 print('\t\t\t\t', end='')
-#                 for i, e in enumerate(value):
-#                     if i != 0 and i % 3 == 0:
-#                         print(f'{e} ')
-#                         print('\t\t\t\t', end='')
-#                     else:
-#                         print(f'{e} ', end='')
-#             else:
-#                 print(f'{key:>12} : {value}')
-#         print('')
-#
-#     return id
-#
+
+def parse_id(prompt, terminal_rows, display=False):
+
+    command_output = parse_list(prompt, terminal_rows, display=False)
+
+    command_output_string = ''
+    for line in command_output:
+        command_output_string += line
+        command_output_string += ' '
+
+    # print(f'parse_id:command_output_string:{command_output_string}')
+
+    command_output_string = command_output_string.replace(' ', '-')
+    command_output_string = command_output_string.replace(')-', ',')
+    # print(f'command_output_string:{command_output_string}')
+
+    command_output_array = command_output_string.split(',')
+    # print(f'command_output_array:{command_output_array}')
+
+    id = {}
+    _ = command_output_array[0]
+    _ = _[8:]
+    _ = _.replace('(', '')
+    _ = _.replace(')', '')
+    id['username'] = _
+
+    id['uid'] = command_output_array[0][4:8]
+    id['gid'] = command_output_array[1][4:8]
+
+    tmp = command_output_array[2:]
+    tmp[0] = tmp[0].replace('groups=', '')
+    id['groups'] = tmp
+
+    if display:
+        for key, value in id.items():
+            if key == 'groups':
+                print(f'{key:>12} : ')
+                print('\t\t\t\t', end='')
+                for i, e in enumerate(value):
+                    if i != 0 and i % 3 == 0:
+                        print(f'{e} ')
+                        print('\t\t\t\t', end='')
+                    else:
+                        print(f'{e} ', end='')
+            else:
+                print(f'{key:>12} : {value}')
+        print('')
+
+    return id
+
 
 def parse_list(prompt, terminal_rows, display=False):
     """
     turn the terminal row and column output into a string
-    line array, taking into account line wraps at column 80
+    line list, taking into account line wraps at column 80
+    and removing the command prompt
 
     :param prompt:
     :param terminal_rows:
@@ -362,6 +365,7 @@ def parse_list(prompt, terminal_rows, display=False):
                     command_output.append(terminal_rows[i])
 
     if display:
+        print(f'parse_list:display')
         for i, e in enumerate(command_output):
             print(f'{i:<3} : {e}')
 

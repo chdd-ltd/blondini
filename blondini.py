@@ -65,11 +65,23 @@ def pre_requisites(pre_requisite):
 
 
 def post_requisites(post_requisite):
-    pass
 
-    # if post_requisite == 'coordinates':
-    #     coordinates = session[0]
-    #     # TODO: conformation that it worked else error and exit!
+    if post_requisite == 'printenv':
+        for actions in session:
+            for k, v in actions.items():
+                if k == 'printenv':
+                    for key, value in v.items():
+                        if key == 'LOGNAME':
+                            user['logname'] = value
+                        if key == 'USER':
+                            user['user'] = value
+                        if key == 'HOME':
+                            user['home'] = value
+
+                            # print(f'actions:{actions}')
+
+        session.append({'user': user})
+        # print(f'user:{user}')
 
 
 def run_terminal_command(command, progress=False, display=False, preview=False):
@@ -270,34 +282,23 @@ if __name__ == '__main__':
     screen_resolution = pyautogui.size()
     print(f'screen_resolution:{screen_resolution}')
 
+    # TODO: try block etc ...
+    with open('examples/whoami.json', 'r') as json_file:
+        actions = json.load(json_file)
+
+    print(f'actions:{actions}')
+
     # open terminal window
     # open_terminal_menu()
 
-    # commands = ['uname -a', 'id', 'pwd', 'ls -la #less']
-    # commands = ['ifconfig #less', 'cat /etc/resolv.conf', 'netstat -netapl #less']   # network
-    # commands = ['cat /etc/passwd #less', 'ps -ef #less']    # running processes
-    # cat /etc/ssh/sshd_config
-    # commands = ['find / -type f -perm -4000 -print 2>/dev/null #less']
-    # commands = ['uname -a']
-
     session = []
     coordinates = []
+    # logname, user, home = '', '', ''
+    user = {}
 
-    actions = []
-    action = {'name': 'setup',
-              'pre_requisites': ['minimise_idea', 'coordinates'],
-              'commands': [],
-              'post_requisites': []}
-    actions.append(action)
-    action = {'name': 'printenv',
-              'pre_requisites': ['focus', 'prompt'],
-              'commands': ['enter', 'clear', 'printenv |less'],
-              'post_requisites': ['printenv']}
-    actions.append(action)
-
-    output = []
-    users = []
-    flag = False
+    progress = False
+    display = True
+    preview = False
 
     for action in actions:
         print(f'\naction : {action["name"]}')
@@ -309,42 +310,26 @@ if __name__ == '__main__':
         for command in action["commands"]:
             print(f'\tcommand : {command}')
 
-            # TODO:
+            # TODO: why and whats the fix/work around
             # `1234567890-=[];'#\,./ shift ¬!"£$%^&*()_+{}:@~|<>?   # UK keyboard layout output
-            # `1234567890-=[];'|<,./ shift  !@ $%^&*()_+{}:"|><>?   # .press(key) output
+            # `1234567890-=[];'|<,./ shift  !@ $%^&*()_+{}:"|><>?   # pyautogui.press(key) output
             #                  ^^          ^ ^^            ^^^      # dif
             command = command.replace('|', '#')
 
-            terminal_rows = run_terminal_command(command, progress=False, display=False, preview=False)
+            terminal_rows = run_terminal_command(command, progress=progress, display=False, preview=preview)
             if terminal_rows:
-                terminal_parser(command, terminal_rows, session, display=False)
+                terminal_parser(command, terminal_rows, session, display=display)
 
         for post_requisite in action["post_requisites"]:
             print(f'\tpost_requisite : {post_requisite}')
             post_requisites(post_requisite)
 
+    # print(f'\nsession : {len(session)}')
+    # for i, e in enumerate(session):
+    #     for key, value in e.items():
+    #         print(f'{i} {key} : {value}')
 
-
-
-
-            # for i, row in enumerate(terminal_rows):
-        # print(f'{i:>2} : {row}')
-
-    # print(f'\noutput : {len(output)}')
-    # for i, e in enumerate(output):
-    #     for k, v, in e.items():
-    #         print(f'\n{i} : {k}')
-    #         if isinstance(v, dict):
-    #             for key, value, in v.items():
-    #                 print(f'{key:>20} : {value}')
-
-    print(f'\nsession : {len(session)}')
-    for i, e in enumerate(session):
-        for key, value in e.items():
-            print(f'{i} {key} : {value}')
-
-    # TODO: try block
-    with open('output.json', 'w') as write_file:
+    with open('session.json', 'w') as write_file:
         json.dump(session, write_file)     # Python to JSON
 
 

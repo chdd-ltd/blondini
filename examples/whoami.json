@@ -1,0 +1,1 @@
+[{"name": "printenv", "pre-requisite": ["focus"], "commands": ["printenv #less"], "post-requisite": ["parse:keyvalue"]}, {"name": "cd home", "pre-requisite": ["focus", "printenv"], "commands": ["cd {printenv[\"HOME\"]}", "ls"], "post-requisite": ["parse:list"]}]

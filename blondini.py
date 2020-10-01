@@ -3,13 +3,14 @@ from common_opencv import preview_window
 
 from monospace_regular_12 import monospace_regular_12
 
-from parser import parse_cat
+# from parser import parse_cat
+# from parser import parse_ls
+# from parser import parse_pwd
 from parser import parse_id
 from parser import parse_ifconfig
-from parser import parse_ls
+from parser import parse_list
 from parser import parse_netstat
 from parser import parse_ps
-from parser import parse_pwd
 from parser import parse_resolv
 from parser import parse_uname
 
@@ -182,6 +183,7 @@ def find_terminal_window(focus=True, preview=False):
 
 
 def type_string(string):
+    # TODO: what is the default delay between presses?
     for c in string:
         if c.isupper():
             pyautogui.keyDown('shift')
@@ -204,16 +206,18 @@ if __name__ == '__main__':
     # will raise a pyautogui.FailSafeException that can abort your program:
     # pyautogui.FAILSAFE = True
     # pyautogui.PAUSE = 0.250
+    # TODO: find out how this works
 
+    # TODO: set these automatically
     # os = 'mate'
     # dir = f'img/{os}'
     # print(f'\n{os} {dir}')
 
     # screen resolution, width x height
-    # screen_resolution = pyautogui.size()
-    # print(f'screen_resolution:{screen_resolution}')
+    screen_resolution = pyautogui.size()
+    print(f'screen_resolution:{screen_resolution}')
 
-    # minimise idea
+    # TODO: if NOT run on the command line, minimise idea
     pyautogui.moveTo(38, 42, duration=0)
     pyautogui.click()
 
@@ -221,16 +225,18 @@ if __name__ == '__main__':
     # open_terminal_menu()
 
     terminal_coordinates = find_terminal_window()
-    # print(f'terminal_coordinates : {terminal_coordinates}')
+    print(f'terminal_coordinates : {terminal_coordinates}')
 
     # TODO: find terminal prompt root @ honestmistake :~# | :~$
     prompt = 'biot@honestmistake'
     print(f'prompt : {prompt}')
 
     commands = ['uname -a', 'id', 'pwd', 'ls -la #less']
-    # commands = ['ifconfig #less', 'cat /etc/resolv.conf', 'netstat -netapl #less']   # network
+    commands = ['ifconfig #less', 'cat /etc/resolv.conf', 'netstat -netapl #less']   # network
     commands = ['cat /etc/passwd #less', 'ps -ef #less']    # running processes
     # cat /etc/ssh/sshd_config
+    # commands = ['find / -type f -perm -4000 -print 2>/dev/null #less']
+    # commands = ['uname -a']
 
     output = []
     users = []
@@ -245,10 +251,18 @@ if __name__ == '__main__':
 
         terminal_rows = run_terminal_command(command, progress=False, display=False, preview=False)
 
+        if command.startswith('find'):
+            find = parse_list(prompt, terminal_rows, display=True)
+            output.append({f'{command}': find})
+
+        if command.startswith('pwd'):
+            pwd = parse_list(prompt, terminal_rows, display=True)
+            output.append({f'{command}': pwd})
+
         if command.startswith('ls'):
-            ls = parse_ls(prompt, terminal_rows, display=True)
+            ls = parse_list(prompt, terminal_rows, display=True)
             output.append({f'{command}': ls})
-            for i, row in enumerate(terminal_rows):
+            for i, row in enumerate(ls):
                 # print(f'{i:>2} : {row}')
 
                 if '.bash_history' in row:
@@ -269,19 +283,15 @@ if __name__ == '__main__':
                 #     commands.append('cat .ssh/id_rsa.pub #less')
 
         if command.startswith('cat'):
-            cat = parse_cat(prompt, terminal_rows, display=True)
+            cat = parse_list(prompt, terminal_rows, display=True)
             output.append({f'{command}': cat})
 
             if command == 'cat /etc/passwd #less':
-                for i, e in enumerate(terminal_rows):
+                for i, e in enumerate(cat):
                     user = e.split(':')
                     users.append(user[0])
                 users.sort()
                 output.append({f'users': users})
-
-        if command.startswith('pwd'):
-            pwd = parse_pwd(prompt, terminal_rows, display=True)
-            output.append({f'{command}': pwd})
 
         if command.startswith('id'):
             id = parse_id(prompt, terminal_rows, display=True)
@@ -307,6 +317,9 @@ if __name__ == '__main__':
             ps = parse_ps(prompt, terminal_rows, users, display=True)
             output.append({f'{command}': ps})
 
+            # for i, row in enumerate(terminal_rows):
+        # print(f'{i:>2} : {row}')
+
     # print(f'\noutput : {len(output)}')
     # for i, e in enumerate(output):
     #     for k, v, in e.items():
@@ -315,6 +328,7 @@ if __name__ == '__main__':
     #             for key, value, in v.items():
     #                 print(f'{key:>20} : {value}')
 
+    # TODO: try block
     with open("output.json", "w") as write_file:
         json.dump(output, write_file)     # Python to JSON
 

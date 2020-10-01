@@ -4,28 +4,6 @@
 """
 
 
-def parse_cat(prompt, terminal_rows, display=False):
-    command_output = []
-    # for i, row in enumerate(terminal_rows):
-    for i in range(0, len(terminal_rows), 1):
-        if i < len(terminal_rows):
-            if prompt not in terminal_rows[i]:
-                if len(terminal_rows[i]) == 80:
-                    # print(f'80 {i:<3} : {terminal_rows[i]} -> {terminal_rows[i+1]}')
-                    command_output.append(terminal_rows[i] + '' + terminal_rows[i+1])
-                    terminal_rows.pop(i+1)
-                    # print(f'80 {i:<3} : {command_output[-1]}')
-                else:
-                    # print(f'{i:>3} : {terminal_rows[i]}')
-                    command_output.append(terminal_rows[i])
-
-    if display:
-        for i, e in enumerate(command_output):
-            print(f'{i:<3} : {e}')
-
-    return command_output
-
-
 def parse_ps(prompt, terminal_rows, users, display=False):
     tmp = ''
     for i, row in enumerate(terminal_rows):
@@ -81,17 +59,21 @@ def parse_netstat(prompt, terminal_rows, display=False):
 def parse_resolv(prompt, terminal_rows, display=False):
     tmp = []
     resolv = {}
-    command_output = []
-    for row in terminal_rows:
-        if prompt not in row:
-            if len(row) == 79:
-                command_output.append(row + ' ')
-            else:
-                command_output.append(row)
 
-        if not row.startswith('#'):
-            if prompt not in row:
-                tmp.append(row)
+    command_output = parse_list(prompt, terminal_rows, display=False)
+
+    # command_output = []
+    # for row in terminal_rows:
+    #     if prompt not in row:
+    #         if len(row) == 79:
+    #             command_output.append(row + ' ')
+    #         else:
+    #             command_output.append(row)
+
+    for line in command_output:
+        if not line.startswith('#'):
+            if prompt not in line:
+                tmp.append(line)
 
     if len(tmp) > 0:
         for e in tmp:
@@ -106,15 +88,16 @@ def parse_resolv(prompt, terminal_rows, display=False):
 
 
 def parse_ifconfig(prompt, terminal_rows, display=False):
+    command_output = parse_list(prompt, terminal_rows, display=False)
     ifconfig = []
-    command_output = []
-    for row in terminal_rows:
-        # print(f'{row}')
-        if prompt not in row:
-            if len(row) == 79:
-                command_output.append(row + ' ')
-            else:
-                command_output.append(row)
+    # command_output = []
+    # for row in terminal_rows:
+    #     # print(f'{row}')
+    #     if prompt not in row:
+    #         if len(row) == 79:
+    #             command_output.append(row + ' ')
+    #         else:
+    #             command_output.append(row)
 
     interface = {}
     for i, line in enumerate(command_output):
@@ -176,19 +159,19 @@ def parse_ifconfig(prompt, terminal_rows, display=False):
 
 
 def parse_uname(prompt, terminal_rows, display=False):
-    command_output = ''
-    for row in terminal_rows:
-        if prompt not in row:
-            if len(row) == 79:
-                command_output += row
-                command_output += ' '
-            else:
-                command_output += row
-                command_output += ' '
 
-    # print(f'command_output:{command_output}')
+    command_output = parse_list(prompt, terminal_rows, display=False)
+    print(f'parse_uname:command_output:{command_output}')
 
-    command_output_array = command_output.split()
+    command_output_string = ''
+    for line in command_output:
+        command_output_string += line + ' '
+        # command_output_string += ' '
+    print(f'parse_uname:command_output_string:{command_output_string}')
+    command_output_string = command_output_string.replace('2020x86_64', '2020 x86_64')
+    command_output_array = command_output_string.split()
+    print(f'parse_uname:command_output_array:{command_output_array}')
+
     uname = {}
     uname['kernel_name'] = command_output_array[0]
     uname['nodename'] = command_output_array[1]
@@ -210,20 +193,21 @@ def parse_uname(prompt, terminal_rows, display=False):
 
 
 def parse_id(prompt, terminal_rows, display=False):
-    command_output = ''
-    for row in terminal_rows:
-        if prompt not in row:
-            if len(row) == 79:
-                command_output += row
-                command_output += ' '
-            else:
-                command_output += row
 
-    command_output = command_output.replace(' ', '-')
-    command_output = command_output.replace(')-', ',')
-    # print(f'command_output:{command_output}')
+    command_output = parse_list(prompt, terminal_rows, display=False)
 
-    command_output_array = command_output.split(',')
+    command_output_string = ''
+    for line in command_output:
+        command_output_string += line
+        command_output_string += ' '
+
+    # print(f'parse_id:command_output_string:{command_output_string}')
+
+    command_output_string = command_output_string.replace(' ', '-')
+    command_output_string = command_output_string.replace(')-', ',')
+    # print(f'command_output_string:{command_output_string}')
+
+    command_output_array = command_output_string.split(',')
     # print(f'command_output_array:{command_output_array}')
 
     id = {}
@@ -258,34 +242,23 @@ def parse_id(prompt, terminal_rows, display=False):
     return id
 
 
-def parse_pwd(prompt, terminal_rows, display=False):
-    command_output = ''
-    for row in terminal_rows:
-        if prompt not in row:
-            if len(row) == 79:
-                command_output += row
-                command_output += ' '
-            else:
-                command_output += row
-
-    if display:
-        print(f'pwd : {command_output}')
-
-    return {'pwd': command_output}
-
-
-def parse_ls(prompt, terminal_rows, display=False):
+def parse_list(prompt, terminal_rows, display=False):
     command_output = []
-    for row in terminal_rows:
-        # print(f'{row}')
-        if prompt not in row:
-            if len(row) == 79:
-                command_output.append(row + ' ')
-            else:
-                command_output.append(row)
+    # for i, row in enumerate(terminal_rows):
+    for i in range(0, len(terminal_rows), 1):
+        if i < len(terminal_rows):
+            if prompt not in terminal_rows[i]:
+                if len(terminal_rows[i]) == 80:
+                    # print(f'80 {i:<3} : {terminal_rows[i]} -> {terminal_rows[i+1]}')
+                    command_output.append(terminal_rows[i] + terminal_rows[i+1])
+                    terminal_rows.pop(i+1)
+                    # print(f'80 {i:<3} : {command_output[-1]}')
+                else:
+                    # print(f'{i:>3} : {terminal_rows[i]}')
+                    command_output.append(terminal_rows[i])
 
     if display:
-        for i, row in enumerate(command_output):
-            print(f'{i:<3} : {row}')
+        for i, e in enumerate(command_output):
+            print(f'{i:<3} : {e}')
 
-    return {'ls': command_output}
+    return command_output

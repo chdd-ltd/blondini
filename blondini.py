@@ -6,13 +6,16 @@ from monospace_regular_12 import monospace_regular_12
 # from parser import parse_cat
 # from parser import parse_ls
 # from parser import parse_pwd
-from parser import parse_id
-from parser import parse_ifconfig
-from parser import parse_list
-from parser import parse_netstat
-from parser import parse_ps
-from parser import parse_resolv
-from parser import parse_uname
+# from terminal_parser import parse
+# from terminal_parser import parse_id
+# from terminal_parser import parse_ifconfig
+# from terminal_parser import parse_list
+# from terminal_parser import parse_netstat
+# from terminal_parser import parse_ps
+# from terminal_parser import parse_resolv
+# from terminal_parser import parse_uname
+
+from terminal_parser import terminal_parser
 
 import cv2 as cv
 import numpy as np
@@ -22,36 +25,85 @@ import json
 import sys
 
 
+def pre_requisites(pre_requisite):
+
+    if pre_requisite == 'minimise_idea':
+        pyautogui.moveTo(38, 42, duration=0)
+        pyautogui.click()
+        # TODO: conformation that it worked else error and exit!
+
+    if pre_requisite == 'coordinates':
+        coordinates = find_terminal_window()
+        session.append({'coordinates': coordinates})
+        # TODO: conformation that it worked else error and exit!
+
+    if pre_requisite == 'focus':
+        pass
+        # TODO: conformation that it worked else error and exit!
+
+    if pre_requisite == 'prompt':
+        pil_image = pyautogui.screenshot(region=(session[0]["coordinates"][0][0], session[0]["coordinates"][0][1],
+                                                 session[0]["coordinates"][4][0], session[0]["coordinates"][4][1]))
+        image = cv.cvtColor(np.array(pil_image), cv.COLOR_RGB2BGR)
+        _, text_rows = monospace_regular_12(image, progress=False, display=False, preview=False)
+        for row in text_rows:
+            if '#' in row:
+                _ = row.split('#')
+                prompt = _[0] + '#'
+                break
+            if '$' in row:
+                _ = row.split('$')
+                prompt = _[0] + '$'
+                break
+
+        # print(f'prompt : {prompt}')
+        if len(prompt) > 0:
+            session.append({'prompt': prompt})
+        else:
+            print(f'error: pre_requisites(prompt) = {prompt}')
+            exit(1)
+
+
+def post_requisites(post_requisite):
+    pass
+
+    # if post_requisite == 'coordinates':
+    #     coordinates = session[0]
+    #     # TODO: conformation that it worked else error and exit!
+
+
 def run_terminal_command(command, progress=False, display=False, preview=False):
 
-    type_string(command)
-    pyautogui.press('enter')
-    time.sleep(.25)
+    if command == 'enter':
+        pyautogui.press('enter')
+    else:
+        type_string(command, True)
 
-    terminal_window = 1
-    terminal_output = {}
+    if command != 'clear' and command != 'enter':
+        terminal_window = 1
+        terminal_output = {}
 
-    while True:
-        pil_image = pyautogui.screenshot(region=(terminal_coordinates[0][0], terminal_coordinates[0][1],
-                                                 terminal_coordinates[4][0], terminal_coordinates[4][1]))
-        image = cv.cvtColor(np.array(pil_image), cv.COLOR_RGB2BGR)
-        image_result, text_rows = monospace_regular_12(image, progress=progress, display=display, preview=preview)
-        terminal_output[terminal_window] = text_rows
+        while True:
+            pil_image = pyautogui.screenshot(region=(session[0]["coordinates"][0][0], session[0]["coordinates"][0][1],
+                                                     session[0]["coordinates"][4][0], session[0]["coordinates"][4][1]))
+            image = cv.cvtColor(np.array(pil_image), cv.COLOR_RGB2BGR)
+            image_result, text_rows = monospace_regular_12(image, progress=progress, display=display, preview=preview)
+            terminal_output[terminal_window] = text_rows
 
-        if 'less' in command:
-            if len(text_rows) > 0 and text_rows[-1] == ':':
-                terminal_window += 1
-                pyautogui.press('pagedown')
-                time.sleep(.25)
+            if 'less' in command:
+                if len(text_rows) > 0 and text_rows[-1] == ':':
+                    terminal_window += 1
+                    pyautogui.press('pagedown')
+                    time.sleep(.25)
+                else:
+                    pyautogui.press('q')
+                    break
             else:
-                pyautogui.press('q')
                 break
-        else:
-            break
 
-    terminal_rows = parse_terminal_output(terminal_output, display=display)
+        terminal_rows = parse_terminal_output(terminal_output, display=display)
 
-    return terminal_rows
+        return terminal_rows
 
 
 def parse_terminal_output(terminal_output, display=False):
@@ -113,9 +165,7 @@ def open_terminal_menu():
     pyautogui.click()
 
     string = 'Terminal'
-    type_string(string)
-
-    pyautogui.press('enter')
+    type_string(string, True)
     time.sleep(.33)
 
 
@@ -182,7 +232,7 @@ def find_terminal_window(focus=True, preview=False):
     return [tl, tr, bl, br, wh]
 
 
-def type_string(string):
+def type_string(string, enter):
     # TODO: what is the default delay between presses?
     for c in string:
         if c.isupper():
@@ -192,8 +242,11 @@ def type_string(string):
         else:
             pyautogui.press(c)
 
+    if enter:
+        pyautogui.press('enter')
 
 # ---------------------------------------------------------------------------- #
+
 
 if __name__ == '__main__':
 
@@ -217,105 +270,62 @@ if __name__ == '__main__':
     screen_resolution = pyautogui.size()
     print(f'screen_resolution:{screen_resolution}')
 
-    # TODO: if NOT run on the command line, minimise idea
-    pyautogui.moveTo(38, 42, duration=0)
-    pyautogui.click()
-
     # open terminal window
     # open_terminal_menu()
 
-    terminal_coordinates = find_terminal_window()
-    print(f'terminal_coordinates : {terminal_coordinates}')
-
-    # TODO: find terminal prompt root @ honestmistake :~# | :~$
-    prompt = 'biot@honestmistake'
-    print(f'prompt : {prompt}')
-
-    commands = ['uname -a', 'id', 'pwd', 'ls -la #less']
-    commands = ['ifconfig #less', 'cat /etc/resolv.conf', 'netstat -netapl #less']   # network
-    commands = ['cat /etc/passwd #less', 'ps -ef #less']    # running processes
+    # commands = ['uname -a', 'id', 'pwd', 'ls -la #less']
+    # commands = ['ifconfig #less', 'cat /etc/resolv.conf', 'netstat -netapl #less']   # network
+    # commands = ['cat /etc/passwd #less', 'ps -ef #less']    # running processes
     # cat /etc/ssh/sshd_config
     # commands = ['find / -type f -perm -4000 -print 2>/dev/null #less']
     # commands = ['uname -a']
 
+    session = []
+    coordinates = []
+
+    actions = []
+    action = {'name': 'setup',
+              'pre_requisites': ['minimise_idea', 'coordinates'],
+              'commands': [],
+              'post_requisites': []}
+    actions.append(action)
+    action = {'name': 'printenv',
+              'pre_requisites': ['focus', 'prompt'],
+              'commands': ['enter', 'clear', 'printenv |less'],
+              'post_requisites': ['printenv']}
+    actions.append(action)
+
     output = []
     users = []
+    flag = False
 
-    for command in commands:
+    for action in actions:
+        print(f'\naction : {action["name"]}')
 
-        pyautogui.press('enter')
-        type_string('clear')
-        pyautogui.press('enter')
+        for pre_requisite in action["pre_requisites"]:
+            print(f'\tpre_requisite : {pre_requisite}')
+            pre_requisites(pre_requisite)
 
-        print(f'\ncommand : {command}')
+        for command in action["commands"]:
+            print(f'\tcommand : {command}')
 
-        terminal_rows = run_terminal_command(command, progress=False, display=False, preview=False)
+            # TODO:
+            # `1234567890-=[];'#\,./ shift ¬!"£$%^&*()_+{}:@~|<>?   # UK keyboard layout output
+            # `1234567890-=[];'|<,./ shift  !@ $%^&*()_+{}:"|><>?   # .press(key) output
+            #                  ^^          ^ ^^            ^^^      # dif
+            command = command.replace('|', '#')
 
-        if command.startswith('find'):
-            find = parse_list(prompt, terminal_rows, display=True)
-            output.append({f'{command}': find})
+            terminal_rows = run_terminal_command(command, progress=False, display=False, preview=False)
+            if terminal_rows:
+                terminal_parser(command, terminal_rows, session, display=False)
 
-        if command.startswith('pwd'):
-            pwd = parse_list(prompt, terminal_rows, display=True)
-            output.append({f'{command}': pwd})
+        for post_requisite in action["post_requisites"]:
+            print(f'\tpost_requisite : {post_requisite}')
+            post_requisites(post_requisite)
 
-        if command.startswith('ls'):
-            ls = parse_list(prompt, terminal_rows, display=True)
-            output.append({f'{command}': ls})
-            for i, row in enumerate(ls):
-                # print(f'{i:>2} : {row}')
 
-                if '.bash_history' in row:
-                    words = row.split()
-                    if int(words[4]) > 1:
-                        commands.append('cat .bash_history #less')
-                        # print(f'words[4] : {words[4]}')
 
-                if row.endswith('.ssh'):
-                    if 'ls -la .ssh/' not in commands:
-                        commands.append('ls -la .ssh/')
 
-                # if row.endswith('authorized_keys') and 'authorized_keys' not in commands:
-                #     commands.append('cat .ssh/authorized_keys')
-                # if row.endswith('id_rsa') and 'id_rsa' not in commands:
-                #     commands.append('cat .ssh/id_rsa #less')
-                # if row.endswith('id_rsa.pub') and 'id_rsa.pub' not in commands:
-                #     commands.append('cat .ssh/id_rsa.pub #less')
-
-        if command.startswith('cat'):
-            cat = parse_list(prompt, terminal_rows, display=True)
-            output.append({f'{command}': cat})
-
-            if command == 'cat /etc/passwd #less':
-                for i, e in enumerate(cat):
-                    user = e.split(':')
-                    users.append(user[0])
-                users.sort()
-                output.append({f'users': users})
-
-        if command.startswith('id'):
-            id = parse_id(prompt, terminal_rows, display=True)
-            output.append({f'{command}': id})
-
-        if command.startswith('uname'):
-            uname = parse_uname(prompt, terminal_rows, display=True)
-            output.append({f'{command}': uname})
-
-        if command.startswith('ifconfig'):
-            ifconfig = parse_ifconfig(prompt, terminal_rows, display=True)
-            output.append({f'{command}': ifconfig})
-
-        if 'resolv' in command:
-            resolv = parse_resolv(prompt, terminal_rows, display=True)
-            output.append({f'{command}': resolv})
-
-        if 'netstat' in command:
-            netstat = parse_netstat(prompt, terminal_rows, display=True)
-            output.append({f'{command}': netstat})
-
-        if command.startswith('ps') and len(users) > 0:
-            ps = parse_ps(prompt, terminal_rows, users, display=True)
-            output.append({f'{command}': ps})
 
             # for i, row in enumerate(terminal_rows):
         # print(f'{i:>2} : {row}')
@@ -328,13 +338,15 @@ if __name__ == '__main__':
     #             for key, value, in v.items():
     #                 print(f'{key:>20} : {value}')
 
+    print(f'\nsession : {len(session)}')
+    for i, e in enumerate(session):
+        for key, value in e.items():
+            print(f'{i} {key} : {value}')
+
     # TODO: try block
-    with open("output.json", "w") as write_file:
-        json.dump(output, write_file)     # Python to JSON
+    with open('output.json', 'w') as write_file:
+        json.dump(session, write_file)     # Python to JSON
 
 
 cv.destroyAllWindows()
 
-# `1234567890-=[];'#\,./ shift ¬!"£$%^&*()_+{}:@~|<>?   # UK keyboard layout output
-# `1234567890-=[];'|<,./ shift  !@ $%^&*()_+{}:"|><>?   # .press(key) output
-#                  ^^          ^ ^^            ^^^      # dif

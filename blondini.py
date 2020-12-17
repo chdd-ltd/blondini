@@ -27,10 +27,10 @@ import sys
 
 def pre_requisites(pre_requisite):
 
-    if pre_requisite == 'minimise_idea':
-        pyautogui.moveTo(38, 42, duration=0)
-        pyautogui.click()
-        # TODO: conformation that it worked else error and exit!
+#    if pre_requisite == 'minimise_idea':
+#        pyautogui.moveTo(38, 42, duration=0)
+#        pyautogui.click()
+#        # TODO: conformation that it worked else error and exit!
 
     if pre_requisite == 'coordinates':
         coordinates = find_terminal_window()
